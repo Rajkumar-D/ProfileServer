@@ -1,0 +1,67 @@
+<html>
+<head>
+<title> my chat</title>
+<style>
+	#chat{
+		height:500px;
+		
+	}
+</style>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+	var socket = io.connect('http://192.168.2.68:3000'); 	
+	/*window.onbeforeunload =  function(e){
+		var message=getJsonDetails();
+		socket.emit('send-disconnect-message',JSON.stringify(message));
+		socket.disconnect();
+  }; */
+  
+  var getDeviceId=function(){
+  socket.on('connect',function(){
+  	socket.emit('getDeviceId',socket.socket.sessionid)
+  });
+  };
+  
+  var msgBox=document.getElementById("message");
+  socket.on("resp-message",function(data){
+	var chat=document.getElementById("chat");
+	chat.innerHTML=chat.innerHTML+data+"<br>";
+  });
+  function submit(){
+	var message=getJsonDetails();
+	socket.emit('send-message',JSON.stringify(message));
+	msgBox.value="";
+  }
+  
+  function getJsonDetails(){
+	var msgBox=document.getElementById("message");
+	var deviceId=document.getElementById("deviceId");
+	var message={};
+	message["sessionId"]=socket.socket.sessionid;
+	message["deviceId"]=deviceId.value;
+	message["message"]=msgBox.value;
+	return message;
+  }
+  
+  socket.on('sendDeviceId',function(data){
+		var deviceId=document.getElementById("deviceId");
+		deviceId.value=data;
+		deviceId.innerHTML="Welcome Device Id : "+data;
+	});
+	
+	socket.on('profile',function(data){
+		var command=document.getElementById("command");
+		command.innerHTML="COMMAND => : "+data+"<br>";
+	});
+</script>
+</head>
+<body onload=getDeviceId() background="1360x768.png">
+
+<label style="color:red" id="command"></label>
+<label id="deviceId">Loading...</label>
+<div id="chat">
+</div>
+
+	<input type="text" id="message">
+	<input type="button" value="send" onclick="submit()">
+</body>
